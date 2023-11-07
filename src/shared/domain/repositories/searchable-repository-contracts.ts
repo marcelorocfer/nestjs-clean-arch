@@ -121,7 +121,7 @@ export class SearchResult<E extends Entity, Filter = string> {
       lastPage: this.lastPage,
       sort: this.sort,
       sortDir: this.sortDir,
-      filter: this.filter
+      filter: this.filter,
     }
   }
 }
