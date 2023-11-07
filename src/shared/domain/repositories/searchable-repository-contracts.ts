@@ -15,7 +15,7 @@ export type SearchResultProps<E extends Entity, Filter> = {
   items: E[]
   total: number
   currentPage: number
-  perpage: number
+  perPage: number
   sort: string | null
   sortDir: string | null
   filter: Filter | null
@@ -95,8 +95,8 @@ export class SearchResult<E extends Entity, Filter = string> {
   readonly items: E[]
   readonly total: number
   readonly currentPage: number
-  readonly perpage: number
-  readonly lastpage: number
+  readonly perPage: number
+  readonly lastPage: number
   readonly sort: string | null
   readonly sortDir: string | null
   readonly filter: Filter | null
@@ -105,8 +105,8 @@ export class SearchResult<E extends Entity, Filter = string> {
     this.items = props.items;
     this.total = props.total;
     this.currentPage = props.currentPage;
-    this.perpage = props.perpage;
-    this.lastpage = Math.ceil(props.total / props.perpage);
+    this.perPage = props.perPage;
+    this.lastPage = Math.ceil(props.total / props.perPage);
     this.sort = props.sort ?? null;
     this.sortDir = props.sortDir ?? null;
     this.filter = props.filter ?? null;
@@ -116,11 +116,11 @@ export class SearchResult<E extends Entity, Filter = string> {
     return {
       items: forceEntity ? this.items.map(item => item.toJSON()) : this.items,
       total: this.total,
-      current_page: this.currentPage,
-      per_page: this.perpage,
-      last_page: this.lastpage,
+      currentPage: this.currentPage,
+      perPage: this.perPage,
+      lastPage: this.lastPage,
       sort: this.sort,
-      sort_dir: this.sortDir,
+      sortDir: this.sortDir,
       filter: this.filter
     }
   }
@@ -128,8 +128,9 @@ export class SearchResult<E extends Entity, Filter = string> {
 
 export interface SearchableRepositoryInterface<
   E extends Entity,
-  SearchInput,
-  SearchOutput,
+  Filter = string,
+  SearchInput = SearchParams,
+  SearchOutput = SearchResult<E, Filter>,
 > extends RepositoryInterface<E> {
-  search(props: SearchParams): Promise<SearchOutput>;
+  search(props: SearchInput): Promise<SearchOutput>;
 }
