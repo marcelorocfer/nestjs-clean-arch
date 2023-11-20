@@ -39,7 +39,8 @@ export class UserInMemoryRepository
     });
   }
 
-  protected async applySort(items: UserEntity[],
+  protected async applySort(
+    items: UserEntity[],
     sort: string | null,
     sortDir: SortDirection | null
   ): Promise<UserEntity[]> {
