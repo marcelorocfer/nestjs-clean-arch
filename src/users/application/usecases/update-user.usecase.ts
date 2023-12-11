@@ -18,7 +18,7 @@ export namespace UpdateUserUseCase {
 
     async execute(input: Input): Promise<Output> {
       if (!input.name) {
-        throw new BadRequestError("Name not provided");
+        throw new BadRequestError('Name not provided');
       }
       const entity = await this.userRepository.findById(input.id);
       entity.update(input.name);
