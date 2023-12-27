@@ -9,6 +9,7 @@ import { UpdateUserDto } from '../../dto/update-user.dto';
 import { UpdatePasswordUseCase } from '@/users/application/usecases/update-password.usecase';
 import { UpdatePasswordDto } from '../../dto/update-password.dto';
 import { GetUserUseCase } from '@/users/application/usecases/get-user.usecase';
+import { ListUsersUseCase } from '@/users/application/usecases/list-users.usecase';
 
 describe('UsersController unit tests', () => {
   let sut: UsersController;
@@ -120,5 +121,27 @@ describe('UsersController unit tests', () => {
     expect(output).toStrictEqual(result);
     expect(mockGetUserUseCase.execute).toHaveBeenCalledWith({ id });
     expect(mockGetUserUseCase.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('should list users', async () => {
+    const output: ListUsersUseCase.Output = {
+      items: [props],
+      currentPage: 1,
+      lastPage: 1,
+      perPage: 1,
+      total: 1,
+    };
+    const mockListUsersUseCase = {
+      execute: jest.fn().mockReturnValue(Promise.resolve(output)),
+    };
+    sut['listUsersUseCase'] = mockListUsersUseCase as any;
+    const searchParams = {
+      page: 1,
+      perPage: 1,
+    };
+    const result = await sut.search(searchParams);
+    expect(output).toStrictEqual(result);
+    expect(mockListUsersUseCase.execute).toHaveBeenCalledWith(searchParams);
+    expect(mockListUsersUseCase.execute).toHaveBeenCalledTimes(1);
   });
 });
