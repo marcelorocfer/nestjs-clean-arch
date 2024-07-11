@@ -60,39 +60,43 @@ export class UserPrismaRepository implements UserRepository.Repository {
     });
   }
 
-  async insert(entity: UserEntity): Promise < void> {
-  await this.prismaService.user.create({
-    data: entity.toJSON(),
-  });
-}
-
-findById(id: string): Promise < UserEntity > {
-  return this._get(id);
-}
-
-  async findAll(): Promise < UserEntity[] > {
-  const models = await this.prismaService.user.findMany();
-
-  return models.map(model => UserModelMapper.toEntity(model));
-}
-
-update(entity: UserEntity): Promise < void> {
-  throw new Error("Method not implemented.");
-}
-
-delete (id: string): Promise < void> {
-  throw new Error("Method not implemented.");
-}
-
-  protected async _get(id: string): Promise < UserEntity > {
-  try {
-    const user = await this.prismaService.user.findUnique({
-      where: { id },
+  async insert(entity: UserEntity): Promise<void> {
+    await this.prismaService.user.create({
+      data: entity.toJSON(),
     });
-
-    return UserModelMapper.toEntity(user);
-  } catch {
-    throw new NotFoundError(`UserModel not found using ID ${id}`)
   }
-}
+
+  findById(id: string): Promise<UserEntity> {
+    return this._get(id);
+  }
+
+  async findAll(): Promise<UserEntity[]> {
+    const models = await this.prismaService.user.findMany();
+
+    return models.map(model => UserModelMapper.toEntity(model));
+  }
+
+  async update(entity: UserEntity): Promise<void> {
+    await this._get(entity._id);
+    await this.prismaService.user.update({
+      data: entity.toJSON(),
+      where: { id: entity._id },
+    });
+  }
+
+  delete(id: string): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+
+  protected async _get(id: string): Promise<UserEntity> {
+    try {
+      const user = await this.prismaService.user.findUnique({
+        where: { id },
+      });
+
+      return UserModelMapper.toEntity(user);
+    } catch {
+      throw new NotFoundError(`UserModel not found using ID ${id}`)
+    }
+  }
 }
