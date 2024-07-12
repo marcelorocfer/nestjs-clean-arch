@@ -18,7 +18,7 @@ export class UserPrismaRepository implements UserRepository.Repository {
 
       return UserModelMapper.toEntity(user);
     } catch {
-      throw new NotFoundError(`Email address already used`);
+      throw new NotFoundError(`UserModel not found using email ${email}`);
     }
   }
 
@@ -28,7 +28,7 @@ export class UserPrismaRepository implements UserRepository.Repository {
     });
 
     if (user) {
-      throw new ConflictError(`UserModel not found using e-mail ${email}`);
+      throw new ConflictError(`Email address already used`);
     }
   }
 
