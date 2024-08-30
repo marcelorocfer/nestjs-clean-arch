@@ -10,8 +10,7 @@ import { map, Observable } from 'rxjs';
 export class WrapperDataInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(map((body) => {
-      console.log('intercepted', body);
-      return body;
+      return !body || 'meta' in body ? body : { data: body };
     }))
   }
 }
