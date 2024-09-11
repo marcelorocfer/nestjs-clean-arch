@@ -136,11 +136,11 @@ describe('UsersController unit tests', () => {
         .post('/users')
         .send(signupDto)
         .expect(409)
-
-      console.log(res.body);
-
-      // expect(res.body.error).toBe('Unprocessable Entity');
-      // expect(res.body.message).toEqual(['property xpto should not exist']);
+        .expect({
+          statusCode: 409,
+          error: 'Conflict',
+          message: 'Email address already used'
+        })
     });
   });
 
