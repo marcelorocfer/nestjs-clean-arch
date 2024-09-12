@@ -1,5 +1,5 @@
 import { Controller, Get, INestApplication } from "@nestjs/common";
-import { ConflictErrorFilter } from "../../conflict-error/conflict-error.filter";
+import { ConflictErrorFilter } from "../../conflict-error.filter";
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConflictError } from "@/shared/domain/errors/conflict-error";
 import request from 'supertest';
@@ -23,10 +23,6 @@ describe('ConflictErrorFilter (e2e)', () => {
     app = module.createNestApplication();
     app.useGlobalFilters(new ConflictErrorFilter());
     await app.init();
-  });
-
-  afterAll(async () => {
-    await module.close();
   });
 
   it('should be defined', () => {
