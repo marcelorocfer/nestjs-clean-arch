@@ -1,20 +1,18 @@
+import { applyGlobalConfig } from "@/global-config";
+import { HashProvider } from "@/shared/application/providers/hash-provider";
 import { DatabaseModule } from "@/shared/infrastructure/database/database.module";
 import { setupPrismaTests } from "@/shared/infrastructure/database/prisma/testing/setup-prisma-tests";
 import { EnvConfigModule } from "@/shared/infrastructure/env-config/env-config.module";
+import { UserEntity } from "@/users/domain/entities/user.entity";
 import { UserRepository } from "@/users/domain/repositories/user.repository";
+import { UserDataBuilder } from "@/users/domain/testing/helpers/user-data-builder";
 import { INestApplication } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { PrismaClient } from "@prisma/client";
-import { UsersModule } from "../../users.module";
-import request from 'supertest'
-import { UsersController } from "../../users.controller";
-import { instanceToPlain } from "class-transformer";
-import { applyGlobalConfig } from "@/global-config";
-import { UserEntity } from "@/users/domain/entities/user.entity";
+import request from 'supertest';
 import { UpdatePasswordDto } from "../../dto/update-password.dto";
-import { HashProvider } from "@/shared/application/providers/hash-provider";
 import { BcryptjsHashProvider } from "../../providers/hash-provider/bcryptjs-hash.provider";
-import { UserDataBuilder } from "@/users/domain/testing/helpers/user-data-builder";
+import { UsersModule } from "../../users.module";
 
 describe('UsersController e2e tests', () => {
   let app: INestApplication;
@@ -80,72 +78,55 @@ describe('UsersController e2e tests', () => {
       ]);
     });
 
-    // it('should return an error with 422 code when the name field is invalid', async () => {
-    //   delete signupDto.name;
-    //   const res = await request(app.getHttpServer())
-    //     .post('/users')
-    //     .send(signupDto)
-    //     .expect(422)
+    it('should return an error with 404 code when the throw NotFoundError with invalid id', async () => {
+      const res = await request(app.getHttpServer())
+        .patch('/users/fakeId')
+        .send(updatePasswordDto)
+        .expect(404)
 
-    //   expect(res.body.error).toBe('Unprocessable Entity');
-    //   expect(res.body.message).toEqual([
-    //     'name should not be empty',
-    //     'name must be a string',
-    //   ]);
-    // });
+      expect(res.body.error).toBe('Not Found');
+      expect(res.body.message).toEqual('UserModel not found using ID fakeId');
+    });
 
-    // it('should return an error with 422 code when the email field is invalid', async () => {
-    //   delete signupDto.email;
-    //   const res = await request(app.getHttpServer())
-    //     .post('/users')
-    //     .send(signupDto)
-    //     .expect(422)
+    it('should return an error with 422 code when the password field is invalid', async () => {
+      delete updatePasswordDto.password;
+      const res = await request(app.getHttpServer())
+        .patch(`/users/${entity._id}`)
+        .send(updatePasswordDto)
+        .expect(422)
 
-    //   expect(res.body.error).toBe('Unprocessable Entity');
-    //   expect(res.body.message).toEqual([
-    //     'email must be an email',
-    //     'email should not be empty',
-    //     'email must be a string',
-    //   ]);
-    // });
+      expect(res.body.error).toBe('Unprocessable Entity');
+      expect(res.body.message).toEqual([
+        'password should not be empty',
+        'password must be a string',
+      ]);
+    });
 
-    // it('should return an error with 422 code when the password field is invalid', async () => {
-    //   delete signupDto.password;
-    //   const res = await request(app.getHttpServer())
-    //     .post('/users')
-    //     .send(signupDto)
-    //     .expect(422)
+    it('should return an error with 422 code when the oldPassword field is invalid', async () => {
+      delete updatePasswordDto.oldPassword;
+      const res = await request(app.getHttpServer())
+        .patch(`/users/${entity._id}`)
+        .send(updatePasswordDto)
+        .expect(422)
 
-    //   expect(res.body.error).toBe('Unprocessable Entity');
-    //   expect(res.body.message).toEqual([
-    //     'password should not be empty',
-    //     'password must be a string',
-    //   ]);
-    // });
+      expect(res.body.error).toBe('Unprocessable Entity');
+      expect(res.body.message).toEqual([
+        'oldPassword should not be empty',
+        'oldPassword must be a string',
+      ]);
+    });
 
-    // it('should return an error with 422 code with invalid fields provided', async () => {
-    //   const res = await request(app.getHttpServer())
-    //     .post('/users')
-    //     .send(Object.assign(signupDto, { xpto: 'fake' }))
-    //     .expect(422)
-
-    //   expect(res.body.error).toBe('Unprocessable Entity');
-    //   expect(res.body.message).toEqual(['property xpto should not exist']);
-    // });
-
-    // it('should return an error with 409 code when email is duplicated', async () => {
-    //   const entity = new UserEntity({ ...signupDto });
-    //   await repository.insert(entity);
-    //   const res = await request(app.getHttpServer())
-    //     .post('/users')
-    //     .send(signupDto)
-    //     .expect(409)
-    //     .expect({
-    //       statusCode: 409,
-    //       error: 'Conflict',
-    //       message: 'Email address already used'
-    //     })
-    // });
+    it('should return an error with 422 code when the password does not match', async () => {
+      updatePasswordDto.oldPassword = 'wrong_password';
+      const res = await request(app.getHttpServer())
+        .patch(`/users/${entity._id}`)
+        .send(updatePasswordDto)
+        .expect(422)
+        .expect({
+          statusCode: 422,
+          error: 'Unprocessable Entity',
+          message: 'Old Password does not match.',
+        })
+    });
   });
-
 });
