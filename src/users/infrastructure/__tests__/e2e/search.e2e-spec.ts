@@ -12,6 +12,7 @@ import request from 'supertest';
 import { UsersModule } from "../../users.module";
 import { instanceToInstance } from "class-transformer";
 import { UsersController } from "../../users.controller";
+import { filter } from "rxjs";
 
 describe('UsersController e2e tests', () => {
   let app: INestApplication;
@@ -39,7 +40,6 @@ describe('UsersController e2e tests', () => {
   });
 
   describe('GET /users', () => {
-
     it('should return the users ordered by createdAt', async () => {
       const createdAt = new Date();
       const entities: UserEntity[] = [];
@@ -71,6 +71,45 @@ describe('UsersController e2e tests', () => {
           currentPage: 1,
           perPage: 15,
           lastPage: 1,
+        }
+      });
+    });
+
+    it('should return the users ordered by name', async () => {
+      const entities: UserEntity[] = [];
+      const arrange = ['test', 'a', 'TEST', 'b', 'TeSt'];
+      arrange.forEach((element, index) => {
+        entities.push(new UserEntity({
+          ...UserDataBuilder({}),
+          name: element,
+          email: `a${index}@a.com`,
+        }));
+      });
+      await prismaService.user.createMany({
+        data: entities.map(item => item.toJSON()),
+      });
+      const searchParams = {
+        page: 1,
+        perPage: 2,
+        sort: 'name',
+        sortDir: 'asc',
+        filter: 'TEST',
+      };
+      const queryParams = new URLSearchParams(searchParams as any).toString();
+
+      const res = await request(app.getHttpServer())
+        .get(`/users/?${queryParams}`)
+        .expect(200);
+
+      expect(Object.keys(res.body)).toStrictEqual(['data', 'meta']);
+      expect(res.body).toEqual({
+        data: [entities[0], entities[4]]
+          .map(item => instanceToInstance(UsersController.userToResponse(item))),
+        meta: {
+          total: 3,
+          currentPage: 1,
+          perPage: 2,
+          lastPage: 2,
         }
       });
     });
