@@ -8,9 +8,7 @@ import { UserDataBuilder } from "@/users/domain/testing/helpers/user-data-builde
 import { INestApplication } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { PrismaClient } from "@prisma/client";
-import { instanceToPlain } from "class-transformer";
 import request from 'supertest';
-import { UsersController } from "../../users.controller";
 import { UsersModule } from "../../users.module";
 
 describe('UsersController e2e tests', () => {

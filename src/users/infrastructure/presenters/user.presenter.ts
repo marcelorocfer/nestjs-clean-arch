@@ -11,10 +11,10 @@ export class UserPresenter {
   createdAt: Date;
 
   constructor(output: UserOutput) {
-    this.id = output.id;
-    this.name = output.name;
-    this.email = output.email;
-    this.createdAt = output.createdAt;
+    this.id = output?.id;
+    this.name = output?.name;
+    this.email = output?.email;
+    this.createdAt = output?.createdAt;
   }
 }
 
