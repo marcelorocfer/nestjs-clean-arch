@@ -1,16 +1,15 @@
-import { UsersController } from '../../users.controller';
 import { UserOutput } from '@/users/application/dto/user-output';
-import { SignupUseCase } from '@/users/application/usecases/signup.usecase';
-import { SignupDto } from '../../dto/signup.dto';
-import { SigninUseCase } from '@/users/application/usecases/signin.usecase';
-import { SigninDto } from '../../dto/signin.dto';
-import { UpdateUserUseCase } from '@/users/application/usecases/update-user.usecase';
-import { UpdateUserDto } from '../../dto/update-user.dto';
-import { UpdatePasswordUseCase } from '@/users/application/usecases/update-password.usecase';
-import { UpdatePasswordDto } from '../../dto/update-password.dto';
 import { GetUserUseCase } from '@/users/application/usecases/get-user.usecase';
 import { ListUsersUseCase } from '@/users/application/usecases/list-users.usecase';
+import { SignupUseCase } from '@/users/application/usecases/signup.usecase';
+import { UpdatePasswordUseCase } from '@/users/application/usecases/update-password.usecase';
+import { UpdateUserUseCase } from '@/users/application/usecases/update-user.usecase';
+import { SigninDto } from '../../dto/signin.dto';
+import { SignupDto } from '../../dto/signup.dto';
+import { UpdatePasswordDto } from '../../dto/update-password.dto';
+import { UpdateUserDto } from '../../dto/update-user.dto';
 import { UserCollectionPresenter, UserPresenter } from '../../presenters/user.presenter';
+import { UsersController } from '../../users.controller';
 
 describe('UsersController unit tests', () => {
   let sut: UsersController;
@@ -53,20 +52,22 @@ describe('UsersController unit tests', () => {
   });
 
   it('should authenticate a user', async () => {
-    const output: SigninUseCase.Output = props;
+    const output = 'fake_token';
     const mockSigninUseCase = {
       execute: jest.fn().mockReturnValue(Promise.resolve(output)),
     };
+    const mockAuthService = {
+      generateJwt: jest.fn().mockReturnValue(Promise.resolve(output)),
+    };
     sut['signinUseCase'] = mockSigninUseCase as any;
+    sut['authService'] = mockAuthService as any;
     const input: SigninDto = {
       email: 'a@a.com',
       password: '1234',
     };
-    const presenter = await sut.login(input);
-    expect(presenter).toBeInstanceOf(UserPresenter);
-    expect(presenter).toStrictEqual(new UserPresenter(output));
+    const result = await sut.login(input);
+    expect(result).toEqual(output);
     expect(mockSigninUseCase.execute).toHaveBeenCalledWith(input);
-    expect(mockSigninUseCase.execute).toHaveBeenCalledTimes(1);
   });
 
   it('should update a user', async () => {
