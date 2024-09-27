@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Inject, HttpCode, Query, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Inject, HttpCode, Query, Put, UseGuards } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { SignupDto } from './dto/signup.dto';
 import { SignupUseCase } from '../application/usecases/signup.usecase';
@@ -14,6 +14,7 @@ import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UserOutput } from '../application/dto/user-output';
 import { UserCollectionPresenter, UserPresenter } from './presenters/user.presenter';
 import { AuthService } from '@/auth/infrastructure/auth.service';
+import { AuthGuard } from '@/auth/infrastructure/auth.guard';
 
 @Controller('users')
 export class UsersController {
@@ -63,31 +64,36 @@ export class UsersController {
   }
 
   @Get()
+  @UseGuards(AuthGuard)
   async search(@Query() searchParams: ListUsersDto) {
     const output = await this.listUsersUseCase.execute(searchParams);
     return UsersController.listUsersToResponse(output);
   }
 
   @Get(':id')
+  @UseGuards(AuthGuard)
   async findOne(@Param('id') id: string) {
     const output = await this.getUserUseCase.execute({ id });
     return UsersController.userToResponse(output);
   }
 
   @Put(':id')
+  @UseGuards(AuthGuard)
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     const output = await this.updateUserUseCase.execute({ id, ...updateUserDto });
     return UsersController.userToResponse(output);
   }
 
   @Patch(':id')
+  @UseGuards(AuthGuard)
   async updatePassword(@Param('id') id: string, @Body() updatePasswordDto: UpdatePasswordDto) {
     const output = await this.updatePasswordUseCase.execute({ id, ...updatePasswordDto });
     return UsersController.userToResponse(output);
   }
 
-  @HttpCode(204)
   @Delete(':id')
+  @HttpCode(204)
+  @UseGuards(AuthGuard)
   async remove(@Param('id') id: string) {
     await this.deleteUserUseCase.execute({ id });
   }
