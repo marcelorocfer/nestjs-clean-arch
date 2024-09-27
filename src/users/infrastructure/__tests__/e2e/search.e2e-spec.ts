@@ -8,17 +8,22 @@ import { UserDataBuilder } from "@/users/domain/testing/helpers/user-data-builde
 import { INestApplication } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { PrismaClient } from "@prisma/client";
-import request from 'supertest';
-import { UsersModule } from "../../users.module";
 import { instanceToInstance } from "class-transformer";
+import request from 'supertest';
 import { UsersController } from "../../users.controller";
-import { filter } from "rxjs";
+import { UsersModule } from "../../users.module";
+import { HashProvider } from "@/shared/application/providers/hash-provider";
+import { BcryptjsHashProvider } from "../../providers/hash-provider/bcryptjs-hash.provider";
 
 describe('UsersController e2e tests', () => {
   let app: INestApplication;
   let module: TestingModule;
   let repository: UserRepository.Repository;
   const prismaService = new PrismaClient();
+  let entity: UserEntity;
+  let hashProvider: HashProvider;
+  let hashPassword: string;
+  let accessToken: string;
 
   beforeAll(async () => {
     setupPrismaTests();
@@ -33,10 +38,23 @@ describe('UsersController e2e tests', () => {
     applyGlobalConfig(app);
     await app.init();
     repository = module.get<UserRepository.Repository>('UserRepository');
+    hashProvider = new BcryptjsHashProvider();
+    hashPassword = await hashProvider.generateHash('123456');
   });
 
   beforeEach(async () => {
     await prismaService.user.deleteMany();
+    entity = new UserEntity(UserDataBuilder({
+      email: 'a@a.com',
+      password: hashPassword,
+    }));
+    await repository.insert(entity);
+
+    const loginResponse = await request(app.getHttpServer())
+      .post('/users/login')
+      .send({ email: 'a@a.com', password: '123456' })
+      .expect(200);
+    accessToken = loginResponse.body.accessToken;
   });
 
   describe('GET /users', () => {
@@ -51,6 +69,7 @@ describe('UsersController e2e tests', () => {
           createdAt: new Date(createdAt.getTime() + index),
         }));
       });
+      await prismaService.user.deleteMany();
       await prismaService.user.createMany({
         data: entities.map(item => item.toJSON()),
       });
@@ -59,6 +78,7 @@ describe('UsersController e2e tests', () => {
 
       const res = await request(app.getHttpServer())
         .get(`/users/?${queryParams}`)
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
       expect(Object.keys(res.body)).toStrictEqual(['data', 'meta']);
@@ -99,6 +119,7 @@ describe('UsersController e2e tests', () => {
 
       const res = await request(app.getHttpServer())
         .get(`/users/?${queryParams}`)
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
       expect(Object.keys(res.body)).toStrictEqual(['data', 'meta']);
@@ -117,9 +138,20 @@ describe('UsersController e2e tests', () => {
     it('should return a error with 422 code when the query params is invalid', async () => {
       const res = await request(app.getHttpServer())
         .get('/users/?fakeId=10')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(422)
         expect(res.body.error).toBe('Unprocessable Entity')
         expect(res.body.message).toEqual(['property fakeId should not exist'])
+    });
+
+    it('should return an error with 401 code when the request is not authorized', async () => {
+      await request(app.getHttpServer())
+        .get(`/users`)
+        .expect(401)
+        .expect({
+          statusCode: 401,
+          message: 'Unauthorized'
+        });
     });
   });
 });
