@@ -1,4 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Inject, HttpCode, Query, Put, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Inject,
+  HttpCode,
+  Query,
+  Put,
+  UseGuards
+} from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { SignupDto } from './dto/signup.dto';
 import { SignupUseCase } from '../application/usecases/signup.usecase';
@@ -15,7 +28,9 @@ import { UserOutput } from '../application/dto/user-output';
 import { UserCollectionPresenter, UserPresenter } from './presenters/user.presenter';
 import { AuthService } from '@/auth/infrastructure/auth.service';
 import { AuthGuard } from '@/auth/infrastructure/auth.guard';
+import { ApiBearerAuth, ApiResponse, ApiTags, getSchemaPath } from '@nestjs/swagger';
 
+@ApiTags('users')
 @Controller('users')
 export class UsersController {
   @Inject(SignupUseCase.UseCase)
@@ -64,6 +79,38 @@ export class UsersController {
   }
 
   @Get()
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    schema: {
+      type: 'object',
+      properties: {
+        meta: {
+          type: 'object',
+          properties: {
+            total: { type: 'number' },
+            currentPage: { type: 'number' },
+            lastPage: { type: 'number' },
+            perPage: { type: 'number' },
+          },
+        },
+        data: {
+          type: 'array',
+          items: {
+            $ref: getSchemaPath(UserPresenter),
+          },
+        },
+      }
+    }
+  })
+  @ApiResponse({
+    status: 422,
+    description: 'Parâmetros de consulta inválidos',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Acesso não autorizado',
+  })
   @UseGuards(AuthGuard)
   async search(@Query() searchParams: ListUsersDto) {
     const output = await this.listUsersUseCase.execute(searchParams);
