@@ -81,6 +81,28 @@ export class UsersController {
 
   @HttpCode(200)
   @Post('login')
+  @ApiResponse({
+    status: 200,
+    schema: {
+      type: 'object',
+      properties: {
+        accessToken: { type: 'string' },
+      },
+    },
+    description: 'Corpo da requisição com dados inválidos',
+  })
+  @ApiResponse({
+    status: 422,
+    description: 'Corpo da requisição com dados inválidos',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'E-mail não encontrado',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Credenciais inválidas',
+  })
   async login(@Body() signinDto: SigninDto) {
     const output = await this.signinUseCase.execute(signinDto);
     return this.authService.generateJwt(output.id);
