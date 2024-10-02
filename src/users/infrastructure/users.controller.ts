@@ -66,6 +66,14 @@ export class UsersController {
   }
 
   @Post()
+  @ApiResponse({
+    status: 409,
+    description: 'Conflito de e-mail',
+  })
+  @ApiResponse({
+    status: 422,
+    description: 'Corpo da requisição com dados inválidos',
+  })
   async create(@Body() signupDto: SignupDto) {
     const output = await this.signupUseCase.execute(signupDto);
     return UsersController.userToResponse(output);
